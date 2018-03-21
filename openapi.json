@@ -1,0 +1,605 @@
+{
+  "openapi": "3.0.0",
+  "servers": [
+    {
+      "url": "https://api.fusioncloud.io/"
+    }
+  ],
+  "info": {
+    "version": "0.92",
+    "title": "Pulse API",
+    "description": "This is the initial release of the Public API for Fusion Pulse, focused on real-time and historical data collection of dividual sensors"
+  },
+  "paths": {
+    "/ping": {
+      "get": {
+        "summary": "Sends a 'Ping' to the application server",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "OK",
+                      "example": "OK"
+                    },
+                    "systemTime": {
+                      "type": "integer",
+                      "description": "UTC timestamp at the time of request",
+                      "example": 1512345678
+                    },
+                    "loadTime": {
+                      "type": "number",
+                      "description": "Total computation time in seconds",
+                      "example": 0.001
+                    },
+                    "apiVersion": {
+                      "type": "number",
+                      "description": "Version of API currently running",
+                      "example": 0.9
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    },
+    "/sensor/{uid}": {
+      "get": {
+        "summary": "Gets the details of a single device",
+        "security": [
+          {
+            "appKey": [],
+            "appSecret": []
+          },
+          {
+            "customerKey": [],
+            "customerSecret": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "uid",
+            "required": true,
+            "description": "Unique identifier of a single device",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "sensor": {
+                      "$ref": "#/components/schemas/Sensor"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/getFormattingRules/{uid}": {
+      "get": {
+        "summary": "Gets the Formatting Rules of a single device",
+        "security": [
+          {
+            "appKey": [],
+            "appSecret": []
+          },
+          {
+            "customerKey": [],
+            "customerSecret": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "uid",
+            "required": true,
+            "description": "Unique identifier of a single device",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "formats": {
+                      "$ref": "#/components/schemas/DataIndexInfo"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/dataPoints/{uid}": {
+      "get": {
+        "summary": "Get Historical data for a particular sensor",
+        "security": [
+          {
+            "appKey": [],
+            "appSecret": []
+          },
+          {
+            "customerKey": [],
+            "customerSecret": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "uid",
+            "required": true,
+            "description": "Unique identifier of a single device",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "startTime",
+            "required": true,
+            "description": "UTC timestamp of the earliest point of data requested",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "endTime",
+            "required": true,
+            "description": "UTC timestamp of the latest point of data requested",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "interval",
+            "required": true,
+            "description": "Interval in seconds of time between returned data points. Use 0 to get all available data",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "OK"
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "A 2-dimensional array containing the historical data values. The outer array is indexed using the index of the data value",
+                      "items": {
+                        "$ref": "#/components/schemas/DataPointArray"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/dataPoints/{uid}/{index}": {
+      "get": {
+        "summary": "Get Historical data for a particular sensor",
+        "security": [
+          {
+            "appKey": [],
+            "appSecret": []
+          },
+          {
+            "customerKey": [],
+            "customerSecret": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "uid",
+            "required": true,
+            "description": "Unique identifier of a single device",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "index",
+            "required": true,
+            "description": "Key of data-index to get historical data of, as in sensor.details.indexNames",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "startTime",
+            "required": true,
+            "description": "UTC timestamp of the earliest point of data requested",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "endTime",
+            "required": true,
+            "description": "UTC timestamp of the latest point of data requested",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "interval",
+            "required": true,
+            "description": "Interval in seconds of time between data points. Use 0 to get all available data",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "OK"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DataPointArray"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "appKey": [],
+      "appSecret": []
+    },
+    {
+      "customerKey": [],
+      "customerSecret": []
+    }
+  ],
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "error",
+            "description": "error"
+          },
+          "message": {
+            "type": "string",
+            "example": "Reason for Error",
+            "description": "Reason for error"
+          },
+          "request": {
+            "type": "object",
+            "description": "Copy of the Request received by the application"
+          }
+        }
+      },
+      "Sensor": {
+        "type": "object",
+        "properties": {
+          "uid": {
+            "type": "string",
+            "description": "Unique ID of sensor"
+          },
+          "dateCreated": {
+            "type": "object",
+            "description": "UTC Timestamp of when the sensor first came online",
+            "properties": {
+              "sec": {
+                "type": "integer"
+              }
+            }
+          },
+          "company": {
+            "type": "integer",
+            "description": "Unique ID of the Company this sensor is assigned to"
+          },
+          "details": {
+            "type": "object",
+            "description": "Further modifiable details of this sensor",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Friendly name for this sensor"
+              },
+              "brand": {
+                "type": "string",
+                "description": "Brand of Device, if applicable"
+              },
+              "model": {
+                "type": "string",
+                "description": "Model of Device, if Applicable"
+              },
+              "indexNames": {
+                "$ref": "#/components/schemas/DataIndexInfo"
+              },
+              "IP": {
+                "type": "string",
+                "description": "AN IP address of device, if monitored over SNMP"
+              },
+              "community": {
+                "type": "string",
+                "description": "Community string of device, if monitored over SNMP"
+              }
+            }
+          },
+          "alarms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlarmDefinition"
+            }
+          },
+          "currentData": {
+            "type": "array",
+            "description": "The current raw sensor data of this device, correct as of 'dateUpdated'. each element corresponds to the array in details.indexNames",
+            "items": {
+              "type": "string"
+            }
+          },
+          "formattedData": {
+            "type": "array",
+            "description": "The formatted sensor data of this device, this is always the readable version of the data in currentData, formatted by the rules in /getFormattedData",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dateUpdated": {
+            "type": "object",
+            "description": "The UTC timestamp of the time the readings of this device were last updated",
+            "properties": {
+              "sec": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "DataIndexInfo": {
+        "type": "array",
+        "description": "Array that describes the individual Data-Points that this sensor contains",
+        "items": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "example": {
+            "1": "Battery Capacity",
+            "postFix": "%",
+            "format": "/10"
+          },
+          "properties": {
+            "postFix": {
+              "type": "string",
+              "description": "postFix used to display data in a friendly way"
+            },
+            "format": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "description": "Array of readable values where the raw data is used as the key in this array",
+                  "example": "format: ['Value 1', 'Value 2']",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "description": "Mathematical Operation describing how to manipulate the raw value to otain a friendly value",
+                  "example": "format: '/ 10'"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "AlarmDefinition": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Either 'time' or 'condition'"
+          },
+          "id": {
+            "type": "integer",
+            "description": "Unique ID of this Alarm definition"
+          },
+          "dataIndex": {
+            "type": "integer",
+            "description": "If Condition alarm, defined the data index of the sensors data, of which the alarm is allocated to",
+            "example": 1
+          },
+          "condition": {
+            "type": "string",
+            "description": "If Condition alarm, defines the query that is placed against the current data index value, to determine if it is in alarm. Must conform to the regex: '/^([<=>] |(!=) )-?[0-9]+$/'"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Indicates whether the alarm is active and alerts should be created"
+          },
+          "rawMessage": {
+            "type": "string",
+            "description": "A template for defining the alarm message based on dynamic data values.",
+            "example": "The UPS is in {$1} mode."
+          },
+          "message": {
+            "type": "string",
+            "description": "Readable Alarm message",
+            "example": "The UPS is in Battery mode."
+          },
+          "simpleMessage": {
+            "type": "string",
+            "description": "Alarm message in cases where the dynamic message isn't possible."
+          },
+          "status": {
+            "type": "object",
+            "properties": {
+              "tripped": {
+                "type": "boolean",
+                "description": "States whether the alarm is currently tripped"
+              },
+              "lastTripped": {
+                "type": "object",
+                "description": "UTC Timestamp of the time this alarm was last tripped"
+              },
+              "id": {
+                "type": "integer",
+                "description": "Used to track global alarm event ID"
+              }
+            }
+          }
+        }
+      },
+      "DataPointArray": {
+        "type": "array",
+        "description": "Array of Data points",
+        "items": {
+          "type": "object",
+          "description": "Individual Data Point",
+          "properties": {
+            "timestamp": {
+              "type": "integer",
+              "description": "UTC Timestamp of the Data Point"
+            },
+            "value": {
+              "type": "string",
+              "description": "The raw value of the Data Point at the UTC timestamp"
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "UnauthorizedError": {
+        "description": "API key is missing or invalid",
+        "content": {
+          "*/*": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Bad request / something not provided",
+        "content": {
+          "*/*": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "appKey": {
+        "type": "apiKey",
+        "in": "query",
+        "name": "appKey"
+      },
+      "appSecret": {
+        "type": "apiKey",
+        "in": "query",
+        "name": "appSecret"
+      },
+      "customerKey": {
+        "type": "apiKey",
+        "in": "query",
+        "name": "customerKey"
+      },
+      "customerSecret": {
+        "type": "apiKey",
+        "in": "query",
+        "name": "customerSecret"
+      }
+    }
+  }
+}
